@@ -17,7 +17,6 @@
     <style>
         :root {
             --primary: #0A84FF;
-            /* Slightly brighter blue for dark mode contrast */
             --bg: #292828;
             --text-main: #FFFFFF;
             --text-muted: #D1D1D6;
@@ -39,7 +38,6 @@
             text-align: center;
         }
 
-        /* Logic container kept for alignment, but visual card styles removed */
         .card {
             background: transparent;
             padding: 20px;
@@ -53,7 +51,6 @@
             height: 80px;
             border-radius: 18px;
             margin-bottom: 20px;
-            /* Optional: subtle shadow to pop off dark bg */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
@@ -132,6 +129,59 @@
             background-color: rgba(255, 255, 255, 0.15);
         }
 
+        /* --- New Styles for Examples Section --- */
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 35px 0 15px;
+            font-weight: 600;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .divider::before {
+            margin-right: 15px;
+        }
+
+        .divider::after {
+            margin-left: 15px;
+        }
+
+        .example-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .example-link {
+            display: block;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--input-border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: var(--text-main);
+            text-decoration: none;
+            text-align: left;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .example-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* -------------------------------------- */
+
         footer {
             margin-top: 50px;
             font-size: 13px;
@@ -156,7 +206,6 @@
 
         .url-display {
             font-family: 'Menlo', monospace;
-            /* Monospace usually looks better for code/urls */
             font-size: 13px;
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--input-border);
@@ -183,6 +232,22 @@
                 <input type="url" id="targetUrl" placeholder="https://example.com/model.usdz">
                 <button onclick="generateLink()">Load Experience</button>
             </div>
+
+            <!-- EXAMPLES SECTION: Only visible if WebXR is supported -->
+            <div id="examples-container" class="hidden">
+                <div class="divider">Examples</div>
+                <div class="example-list">
+                    <a href="https://pmndrs.github.io/xr/examples/uikit/" class="example-link">Pmndrs UI Kit</a>
+                    <a href="https://pmndrs.github.io/xr/examples/editor/" class="example-link">Pmndrs Editor</a>
+                    <a href="https://pmndrs.github.io/xr/examples/hit-testing/" class="example-link">Pmndrs Hit
+                        Testing</a>
+                    <a href="https://pmndrs.github.io/xr/examples/stage/" class="example-link">Pmndrs Stage</a>
+                    <a href="https://threejs.org/examples/webxr_xr_paint.html" class="example-link">Three.js Paint</a>
+                    <a href="https://threejs.org/examples/webxr_xr_dragging.html" class="example-link">Three.js
+                        Dragging</a>
+                    <a href="https://story.cyango.com/688cf19f368c05b9ae4b7af8" class="example-link">Cyango Story</a>
+                </div>
+            </div>
         </div>
 
         <!-- STATE 2: URL parameter exists -->
@@ -202,10 +267,24 @@
         const urlParams = new URLSearchParams(window.location.search);
         const toParam = urlParams.get('to');
 
+        // State Management
         if (toParam) {
             document.getElementById('landing-state').classList.add('hidden');
             document.getElementById('ready-state').classList.remove('hidden');
             document.getElementById('display-url').textContent = toParam;
+        } else {
+            // Check for WebXR AR support only on the landing state
+            if ('xr' in navigator) {
+                navigator.xr.isSessionSupported('immersive-ar')
+                    .then((supported) => {
+                        if (supported) {
+                            document.getElementById('examples-container').classList.remove('hidden');
+                        }
+                    })
+                    .catch((err) => {
+                        console.log("WebXR check failed", err);
+                    });
+            }
         }
 
         function generateLink() {
