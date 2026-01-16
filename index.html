@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    <link rel="icon" href="dark_logo.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="logo.svg">
 
     <style>
@@ -144,6 +144,12 @@
             font-weight: 600;
         }
 
+        /* Hide divider margin when it's the first visible element */
+        .hidden+.examples-wrapper .divider,
+        #input-section.hidden~.examples-wrapper .divider {
+            margin-top: 10px;
+        }
+
         .divider::before,
         .divider::after {
             content: '';
@@ -203,7 +209,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .url-display {
@@ -228,15 +234,16 @@
 
         <!-- STATE 1: No URL parameter -->
         <div id="landing-state">
-            <p>Enter a WebXR URL to launch the App Clip.</p>
-            <div class="input-group">
+            <p id="intro-text">Enter a WebXR URL to launch the App Clip.</p>
+
+            <div id="input-section" class="input-group">
                 <label>Target URL</label>
                 <input type="url" id="targetUrl" placeholder="https://example.com/model.usdz">
                 <button onclick="generateLink()">Load Experience</button>
             </div>
 
-            <!-- EXAMPLES SECTION: Only visible if WebXR is supported -->
-            <div id="examples-container" class="hidden">
+            <!-- EXAMPLES SECTION -->
+            <div id="examples-container" class="examples-wrapper hidden">
                 <div class="divider">Examples</div>
                 <div class="example-list">
                     <a href="https://pmndrs.github.io/xr/examples/uikit/" class="example-link">Pmndrs UI Kit</a>
@@ -275,17 +282,57 @@
             document.getElementById('ready-state').classList.remove('hidden');
             document.getElementById('display-url').textContent = toParam;
         } else {
-            // Check for WebXR AR support only on the landing state
+            // XR Capability Check
+            checkXRSupport();
+        }
+
+        function checkXRSupport() {
+            const examplesContainer = document.getElementById('examples-container');
+            const inputSection = document.getElementById('input-section');
+            const introText = document.getElementById('intro-text');
+            const exampleLinks = document.querySelectorAll('.example-link');
+
+            // Helper to configure the UI for Non-XR capable devices
+            const setupForNonXR = () => {
+                // Show Input and Instructions
+                inputSection.classList.remove('hidden');
+                introText.classList.remove('hidden');
+
+                // Show Examples
+                examplesContainer.classList.remove('hidden');
+
+                // Rewrite links to trigger App Clip
+                exampleLinks.forEach(link => {
+                    const originalUrl = link.getAttribute('href');
+                    link.href = `https://helloxr.app?to=${originalUrl}`;
+                });
+            };
+
+            // Helper to configure the UI for XR capable devices
+            const setupForXR = () => {
+                // Hide Input and Instructions
+                inputSection.classList.add('hidden');
+                introText.classList.add('hidden');
+
+                // Show Examples (Original Links)
+                examplesContainer.classList.remove('hidden');
+            };
+
             if ('xr' in navigator) {
                 navigator.xr.isSessionSupported('immersive-ar')
                     .then((supported) => {
                         if (supported) {
-                            document.getElementById('examples-container').classList.remove('hidden');
+                            setupForXR();
+                        } else {
+                            setupForNonXR();
                         }
                     })
                     .catch((err) => {
-                        console.log("WebXR check failed", err);
+                        console.log("WebXR check error", err);
+                        setupForNonXR();
                     });
+            } else {
+                setupForNonXR();
             }
         }
 
